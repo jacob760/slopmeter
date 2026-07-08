@@ -4,7 +4,10 @@ A lightweight, real-time **DPS / HPS / tanking meter for EverQuest** (live, *Leg
 emulated servers). It tails the game's combat log and shows a compact, always-on-top overlay
 you can float over the game — plus a plain console mode.
 
-No installers, no dependencies. Just Python's standard library.
+![SlopMeter overlay](docs/slopmeter.png)
+
+> **Runs on Windows and needs [Python 3.8+](https://www.python.org/downloads/).**
+> That's the only requirement — no other installs, no third-party packages, just Python's standard library.
 
 > 🃏 **Made for fun in ~2 prompts. Completely unsupported.**
 > No issues, no PRs, no roadmap, no guarantees — if it breaks, you keep both pieces.
@@ -37,15 +40,18 @@ No installers, no dependencies. Just Python's standard library.
 
 ## Quick start
 
-1. **Enable logging in EverQuest** (once per character): log in and type
+1. **Install Python** (if you don't have it): [python.org/downloads](https://www.python.org/downloads/) — on the
+   installer's first screen, tick **"Add Python to PATH"**. Nothing else to install.
+2. **Get SlopMeter:** download this repo (green **Code ▸ Download ZIP**) and unzip it anywhere.
+3. **Enable logging in EverQuest** (once per character): log in and type
    ```
    /log on
    ```
-2. **Launch SlopMeter:**
+4. **Launch SlopMeter:**
    - Overlay: double-click **`SlopMeter.bat`**
    - Console: double-click **`SlopMeter-console.bat`**
-3. It auto-finds your Logs folder. If it can't, it asks you to pick your EverQuest folder — once.
-4. Go fight something. The bars fill in real time.
+5. It auto-finds your Logs folder. If it can't, it asks you to pick your EverQuest folder — once, then remembers it.
+6. Go fight something. The bars fill in real time. Drag the top bar to move it over the game.
 
 *(Overlay always-on-top works with EQ in **windowed** or **borderless** mode. True exclusive
 fullscreen can cover any overlay — switch EQ to borderless if it hides.)*
