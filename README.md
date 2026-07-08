@@ -23,6 +23,7 @@ you can float over the game — plus a plain console mode.
 - **Live overlay** — draggable, translucent, always-on-top; ranked damage bars that update ~4×/sec
 - **Three views** — **DPS** (damage done), **HPS** (healing done), and your **DTPS** (damage taken, for tanking)
 - **Smart attribution** — your melee, spells and DoTs, groupmates, and pets; mobs are kept out of the damage table automatically
+- **Pet nesting** — map a pet to its owner and its damage folds into the owner's total, shown as an indented child row
 - **Encounter tracking** — auto-resets after a lull so each pull is its own parse
 - **Copy parse** — one click puts a chat-ready one-liner on your clipboard to paste into `/g`, `/gu`, `/say`
 - **In-game auto-post** *(optional, off by default)* — a hotbutton triggers SlopMeter to post the parse to group for you
@@ -102,6 +103,26 @@ channel via `CHANNEL` at the top of `eqdps_ui.py` (e.g. `"/gu "` for guild).
 
 ---
 
+## Pets
+
+EverQuest never names a pet's owner on its damage lines, so pets show up as their own
+combatant by default. To fold a pet into its owner — displayed as an indented child row,
+with the owner's total including the pet — give SlopMeter a mapping:
+
+- Create a **`pets.txt`** next to the scripts (see `pets.txt.example`) with one line per pet:
+  ```
+  Gybez = Rude
+  Vexer = Slippy
+  ```
+- Or let it **auto-learn**: any `My leader is <owner>` line SlopMeter sees (e.g. target a
+  groupmate's pet and have them `/pet leader`) is added to `pets.txt` for you.
+
+```
+▶ Rude            1,147/s  37.8%
+   └ Gybez          320/s
+  Uthur              900/s  29.7%
+```
+
 ## How it finds your logs
 
 Resolution order: an explicit `--logs` path → a remembered choice
@@ -126,6 +147,7 @@ python eqdps.py --idle 12                              # encounter reset gap (se
 | `eqdps.py` | the console meter + the shared log parser/attribution |
 | `eqchat.py` | posts a parse into EQ chat (clipboard + Ctrl+V) |
 | `eqfind.py` | auto-detects and remembers the EQ Logs folder |
+| `pets.txt.example` | template for mapping pets to owners |
 | `SlopMeter.bat` / `SlopMeter-console.bat` | launchers |
 
 ---

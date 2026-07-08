@@ -10,6 +10,7 @@ env/
 config.json
 *.log
 parses.log
+pets.txt
 
 # OS / editor cruft
 .DS_Store

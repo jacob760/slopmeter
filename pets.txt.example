@@ -1,0 +1,10 @@
+# SlopMeter pet map  —  copy/rename this file to  pets.txt  (or just let SlopMeter create it).
+# One mapping per line:   PetName = OwnerName
+# Pet damage is then nested under, and folded into, the owner's total in the meter.
+#
+# Examples:
+#   Gybez = Rude
+#   Vexer = Slippy
+#
+# SlopMeter also auto-learns: any "My leader is <owner>" line it sees (e.g. target a
+# groupmate's pet and have them use /pet leader) gets added here automatically.

@@ -15,6 +15,7 @@ Controls:
 """
 
 import os
+import re
 import time
 import threading
 import tkinter as tk
@@ -40,8 +41,44 @@ GOLD    = "#ffc63c"          # you
 DMG_PAL = ["#e0554e", "#e08a3c", "#d7c04a", "#6fb04a", "#4a9fd7", "#8a6fe0", "#d76fb0", "#4ac0b0"]
 HEAL    = "#5cba63"
 TAKEN   = "#e0554e"
+PET     = "#5a6478"          # dim slate for pet child rows
 REFRESH_MS = 250
 IDLE_RESET = 10.0
+
+# Pet -> owner mapping. EQ doesn't name a pet's owner on damage lines, so we rely on
+# a small pets.txt ("PetName = OwnerName") plus any "My leader is <owner>" line we can
+# auto-learn. Pet damage is then nested under (and folded into) the owner's total.
+PETS_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "pets.txt")
+LEADER_RE = re.compile(r"\] ([A-Za-z`-]+) (?:says|tells you)[,]? '.*?[Mm]y [Ll]eader is ([A-Za-z`-]+)")
+
+
+def load_pets():
+    pets = {}
+    try:
+        with open(PETS_FILE, encoding="utf-8") as f:
+            for ln in f:
+                ln = ln.split("#", 1)[0].strip()
+                if not ln:
+                    continue
+                for sep in ("=", ":"):
+                    if sep in ln:
+                        pet, owner = ln.split(sep, 1)
+                        pets[pet.strip().lower()] = owner.strip()
+                        break
+    except OSError:
+        pass
+    return pets
+
+
+def save_pet(pet, owner):
+    try:
+        new = not os.path.exists(PETS_FILE)
+        with open(PETS_FILE, "a", encoding="utf-8") as f:
+            if new:
+                f.write("# SlopMeter pet map:  PetName = OwnerName  (one per line)\n")
+            f.write(f"{pet} = {owner}\n")
+    except OSError:
+        pass
 
 
 class Meter(tk.Tk):
@@ -56,6 +93,7 @@ class Meter(tk.Tk):
         self.flash_until = 0.0
         self.enc = core.Encounter()
         self.mobs = set()
+        self.pets = load_pets()           # {petname_lower: owner}
         self.me = "You"
         self.logfile = None
         self.f = None
@@ -167,9 +205,9 @@ class Meter(tk.Tk):
         if not total:
             return "No combat parsed yet."
         label = "DPS" if mode == "dmg" else "HPS"
-        ranked = sorted(data.items(), key=lambda kv: kv[1], reverse=True)[:8]
-        parts = [f"{i}) {src} {val/dur:,.0f} ({100*val/total:.0f}%)"
-                 for i, (src, val) in enumerate(ranked, 1)]
+        rows = self._group(data)[:8]        # owner totals (pets folded in)
+        parts = [f"{i}) {r['owner']} {r['total']/dur:,.0f} ({100*r['total']/total:.0f}%)"
+                 for i, r in enumerate(rows, 1)]
         head = f"{label} {dur:.0f}s"
         if mode == "dmg":
             tgt = max((n for n in self.enc.taken if core.is_mob(n, self.mobs)),
@@ -264,6 +302,14 @@ class Meter(tk.Tk):
                 if mode:
                     self._autopost(mode)
                     continue
+            lead = LEADER_RE.search(line)     # auto-learn pet -> owner
+            if lead:
+                pet, owner = lead.group(1), lead.group(2)
+                if pet.lower() not in self.pets:
+                    self.pets[pet.lower()] = owner
+                    save_pet(pet, owner)
+                    self._notify(f"pet learned: {pet} → {owner}")
+                continue
             r = core.parse_line(line, self.me)
             if not r:
                 continue
@@ -285,6 +331,25 @@ class Meter(tk.Tk):
         self._redraw()
         self.after(REFRESH_MS, self._tick)
 
+    # ---------- grouping (fold pets under owners) ----------
+    def _group(self, data):
+        """Return owner rows sorted by total desc:
+        [{owner, total, pets:[(pet, amt), ...]}], pet damage folded into the owner."""
+        owners = {}
+        for src, amt in data.items():
+            owner = self.pets.get(src.lower())
+            if owner and owner.lower() != src.lower():
+                o = owners.setdefault(owner, {"own": 0, "pets": {}})
+                o["pets"][src] = o["pets"].get(src, 0) + amt
+            else:
+                o = owners.setdefault(src, {"own": 0, "pets": {}})
+                o["own"] += amt
+        rows = [{"owner": k, "total": v["own"] + sum(v["pets"].values()),
+                 "pets": sorted(v["pets"].items(), key=lambda x: -x[1])}
+                for k, v in owners.items()]
+        rows.sort(key=lambda r: -r["total"])
+        return rows
+
     # ---------- painting ----------
     def _redraw(self):
         c = self.canvas
@@ -292,32 +357,45 @@ class Meter(tk.Tk):
         data = self.enc.dmg if self.mode == "dmg" else self.enc.heal
         dur = self.enc.duration
         total = sum(data.values())
-        ranked = sorted(data.items(), key=lambda kv: kv[1], reverse=True)[:ROWS]
-        top = ranked[0][1] if ranked else 1
+        rows = self._group(data)
+        top = rows[0]["total"] if rows else 1
 
-        if not ranked:
+        # flatten owner rows + their pet children into display lines, capped at ROWS
+        flat = []
+        for oi, r in enumerate(rows):
+            flat.append(("owner", oi, r["owner"], r["total"]))
+            for pet, amt in r["pets"]:
+                flat.append(("pet", oi, pet, amt))
+        flat = flat[:ROWS]
+
+        if not flat:
             c.create_text(W // 2, ROWS * ROW_H // 2, fill=MUTED,
                           font=("Segoe UI", 10),
                           text="waiting for combat…  (/log on)")
-        for i, (src, val) in enumerate(ranked):
+        for i, (kind, oi, name, val) in enumerate(flat):
             y0 = i * ROW_H + 2
             y1 = y0 + ROW_H - 4
             frac = val / top if top else 0
-            is_me = (src == self.me)
-            if self.mode == "heal":
-                color = HEAL
-            else:
-                color = GOLD if is_me else DMG_PAL[i % len(DMG_PAL)]
+            if kind == "owner":
+                is_me = (name == self.me)
+                color = HEAL if self.mode == "heal" else (GOLD if is_me else DMG_PAL[oi % len(DMG_PAL)])
+                label = ("▶ " if is_me else "") + name[:22]
+                pct = 100 * val / total if total else 0
+                rtext = f"{val/dur:,.0f}/s  {pct:4.1f}%"
+                bx, nfont = 6, ("Segoe UI Semibold", 9)
+            else:  # pet child row: indented, dim, no percent
+                color = PET
+                label = "  └ " + name[:20]
+                rtext = f"{val/dur:,.0f}/s"
+                bx, nfont = 18, ("Segoe UI", 8)
             c.create_rectangle(6, y0, W - 6, y1, fill=BAR_BG, outline="")
-            c.create_rectangle(6, y0, 6 + (W - 12) * frac, y1, fill=color, outline="")
-            name = ("▶ " if is_me else "") + src[:22]
-            c.create_text(12, (y0 + y1) // 2, anchor="w", fill="#0c0e13" if frac > 0.5 else FG,
-                          font=("Segoe UI Semibold", 9), text=name)
-            per = val / dur
-            pct = 100 * val / total if total else 0
-            c.create_text(W - 10, (y0 + y1) // 2, anchor="e", fill="#0c0e13" if frac > 0.9 else FG,
-                          font=("Consolas", 9),
-                          text=f"{per:,.0f}/s  {pct:4.1f}%")
+            c.create_rectangle(bx, y0, bx + (W - 6 - bx) * frac, y1, fill=color, outline="")
+            c.create_text(bx + 6, (y0 + y1) // 2, anchor="w",
+                          fill="#0c0e13" if (kind == "owner" and frac > 0.5) else FG,
+                          font=nfont, text=label)
+            c.create_text(W - 10, (y0 + y1) // 2, anchor="e",
+                          fill="#0c0e13" if (kind == "owner" and frac > 0.9) else FG,
+                          font=("Consolas", 9), text=rtext)
 
         if self.flash and time.time() < self.flash_until:
             self.footer.config(text=self.flash, fg="#9fe0a0")
