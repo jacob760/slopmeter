@@ -6,6 +6,10 @@ you can float over the game — plus a plain console mode.
 
 No installers, no dependencies. Just Python's standard library.
 
+> 🃏 **Made for fun in ~2 prompts. Completely unsupported.**
+> No issues, no PRs, no roadmap, no guarantees — if it breaks, you keep both pieces.
+> It's public domain; fork it, gut it, ship your own. I'm not maintaining this.
+
 > EverQuest has no in-client addon runtime, so — like ACT and GamParse — SlopMeter reads the
 > combat log the client already writes. Nothing is injected into the game.
 
@@ -131,9 +135,11 @@ python eqdps.py --idle 12                              # encounter reset gap (se
 
 ## Disclaimer
 
-Not affiliated with Daybreak Game Company or any EverQuest server. This is a fan-made log reader.
-Respect your server's rules — especially before enabling auto-post. Provided as-is, no warranty.
+A throwaway fun project — **not maintained, not supported.** Not affiliated with Daybreak Game
+Company or any EverQuest server; just a fan-made log reader. Respect your server's rules,
+especially before enabling auto-post. Provided as-is, zero warranty, use at your own risk.
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+**The Unlicense** — public domain. Do whatever you want; no attribution needed, no strings.
+It's not "really" licensed, on purpose. See [LICENSE](LICENSE).
