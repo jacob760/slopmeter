@@ -6,6 +6,11 @@ __pycache__/
 venv/
 env/
 
+# PyInstaller build artifacts (exes are shipped via GitHub Releases, not committed)
+build/
+dist/
+*.spec
+
 # SlopMeter local runtime / user config (kept out of the repo)
 config.json
 *.log

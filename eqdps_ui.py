@@ -16,6 +16,7 @@ Controls:
 
 import os
 import re
+import sys
 import time
 import threading
 import tkinter as tk
@@ -48,7 +49,14 @@ IDLE_RESET = 10.0
 # Pet -> owner mapping. EQ doesn't name a pet's owner on damage lines, so we rely on
 # a small pets.txt ("PetName = OwnerName") plus any "My leader is <owner>" line we can
 # auto-learn. Pet damage is then nested under (and folded into) the owner's total.
-PETS_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "pets.txt")
+def _app_dir():
+    # next to the .exe when frozen (PyInstaller), else next to this script
+    if getattr(sys, "frozen", False):
+        return os.path.dirname(sys.executable)
+    return os.path.dirname(os.path.abspath(__file__))
+
+
+PETS_FILE = os.path.join(_app_dir(), "pets.txt")
 LEADER_RE = re.compile(r"\] ([A-Za-z`-]+) (?:says|tells you)[,]? '.*?[Mm]y [Ll]eader is ([A-Za-z`-]+)")
 
 

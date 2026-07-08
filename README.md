@@ -6,8 +6,9 @@ you can float over the game — plus a plain console mode.
 
 ![SlopMeter overlay](docs/slopmeter.png)
 
-> **Runs on Windows and needs [Python 3.8+](https://www.python.org/downloads/).**
-> That's the only requirement — no other installs, no third-party packages, just Python's standard library.
+> **Windows only. Two ways to run it:**
+> - 🟢 **Download the app** — grab `SlopMeter.exe` from the [**Releases**](https://github.com/jacob760/slopmeter/releases) page and double-click. Standalone, **no Python required.**
+> - 🐍 **Run from source** — needs [Python 3.8+](https://www.python.org/downloads/) (standard library only, no packages).
 
 > 🃏 **Made for fun in ~2 prompts. Completely unsupported.**
 > No issues, no PRs, no roadmap, no guarantees — if it breaks, you keep both pieces.
@@ -39,20 +40,23 @@ you can float over the game — plus a plain console mode.
 
 ---
 
-## Quick start
+## Quick start — the easy way (no Python)
 
-1. **Install Python** (if you don't have it): [python.org/downloads](https://www.python.org/downloads/) — on the
-   installer's first screen, tick **"Add Python to PATH"**. Nothing else to install.
-2. **Get SlopMeter:** download this repo (green **Code ▸ Download ZIP**) and unzip it anywhere.
-3. **Enable logging in EverQuest** (once per character): log in and type
-   ```
-   /log on
-   ```
-4. **Launch SlopMeter:**
-   - Overlay: double-click **`SlopMeter.bat`**
-   - Console: double-click **`SlopMeter-console.bat`**
-5. It auto-finds your Logs folder. If it can't, it asks you to pick your EverQuest folder — once, then remembers it.
-6. Go fight something. The bars fill in real time. Drag the top bar to move it over the game.
+1. Download **`SlopMeter.exe`** from the [**Releases**](https://github.com/jacob760/slopmeter/releases) page. Put it anywhere.
+2. In EverQuest, log in and type `/log on` (once per character).
+3. Double-click **`SlopMeter.exe`**. It auto-finds your Logs folder (or asks you to pick it once, then remembers).
+4. Go fight something. Drag the top bar to move it over the game.
+
+> First launch may show Windows SmartScreen ("Windows protected your PC") because the app is
+> unsigned. Click **More info ▸ Run anyway**. (It's a tiny open-source log reader — the
+> [source is right here](https://github.com/jacob760/slopmeter) if you want to check or build it yourself.)
+
+## Quick start — from source (needs Python)
+
+1. **Install Python:** [python.org/downloads](https://www.python.org/downloads/) — tick **"Add Python to PATH"**.
+2. **Get SlopMeter:** **Code ▸ Download ZIP**, unzip anywhere.
+3. In EverQuest: `/log on`.
+4. Double-click **`SlopMeter.bat`** (overlay) or **`SlopMeter-console.bat`** (console).
 
 *(Overlay always-on-top works with EQ in **windowed** or **borderless** mode. True exclusive
 fullscreen can cover any overlay — switch EQ to borderless if it hides.)*
